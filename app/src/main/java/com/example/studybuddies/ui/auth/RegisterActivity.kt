@@ -56,7 +56,7 @@ class RegisterActivity : AppCompatActivity() {
                                 .set(newUser)
                                 .addOnSuccessListener {
                                     Toast.makeText(this@RegisterActivity, "Registration Successful", Toast.LENGTH_SHORT).show()
-                                    finish() // Go back to login
+                                    finish()
                                 }
                                 .addOnFailureListener { e ->
                                     Toast.makeText(this@RegisterActivity, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()

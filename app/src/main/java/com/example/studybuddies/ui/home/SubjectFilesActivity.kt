@@ -233,8 +233,6 @@ class SubjectFilesActivity : AppCompatActivity() {
     private fun setupFirestoreListener() {
         db.collection("files")
             .whereEqualTo("driveId", currentDriveId)
-            // .orderBy requires a composite index if used with whereEqualTo. 
-            // For a student project, client-side sorting is easier if no index is manually created.
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Toast.makeText(this, "Listen failed: ${error.message}", Toast.LENGTH_SHORT).show()
@@ -262,8 +260,6 @@ class SubjectFilesActivity : AppCompatActivity() {
     private fun uploadFileMock(uri: Uri) {
         val user = auth.currentUser ?: return
         
-        Toast.makeText(this, "Mocking File Upload...", Toast.LENGTH_SHORT).show()
-
         val isCamera = uri == cameraUri
         
         var ext = ".pdf"

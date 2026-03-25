@@ -29,7 +29,6 @@ class ProfileActivity : AppCompatActivity() {
             try {
                 val inputStream = contentResolver.openInputStream(uri)
                 val originalBitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                // Downscale for Firestore Base64 limits
                 val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(originalBitmap, 250, 250, true)
                 
                 val outputStream = java.io.ByteArrayOutputStream()

@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
         tvRegister = findViewById(R.id.tvRegister)
-        btnAdminLogin = findViewById(R.id.btnAdminLogin) // Initialize btnAdminLogin
+        btnAdminLogin = findViewById(R.id.btnAdminLogin)
     }
 
     private fun setupListeners() {
@@ -77,7 +77,6 @@ class LoginActivity : AppCompatActivity() {
                     finish()
                 }
                 .addOnFailureListener {
-                    // If doesn't exist, create it
                     auth.createUserWithEmailAndPassword(adminEmail, adminPass)
                         .addOnSuccessListener { result ->
                             val user = result.user
@@ -86,8 +85,8 @@ class LoginActivity : AppCompatActivity() {
                                     uid = user.uid,
                                     email = adminEmail,
                                     displayName = "Administrator",
-                                    reputationPoints = 9999, // Admins get max points
-                                    hasUploaded = true // Admins bypass rules
+                                    reputationPoints = 9999,
+                                    hasUploaded = true
                                 )
                                 FirebaseFirestore.getInstance().collection("users").document(user.uid).set(newUser)
                                 Toast.makeText(this, "Admin Created & Logged In", Toast.LENGTH_SHORT).show()
