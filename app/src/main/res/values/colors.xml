@@ -2,4 +2,20 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Premium Brand Colors: Midnight Blue & Gold -->
+    <color name="colorPrimary">#1A237E</color>        <!-- Midnight Blue -->
+    <color name="colorPrimaryDark">#000051</color>    <!-- Deep Navy -->
+    <color name="colorAccent">#D4AF37</color>         <!-- Metallic Gold -->
+    
+    <!-- UI Elements -->
+    <color name="colorBackground">#F8F9FA</color>     <!-- Soft Pearl White -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorTextPrimary">#1F2937</color>    <!-- Charcoal -->
+    <color name="colorTextSecondary">#6B7280</color>  <!-- Slate Gray -->
+    <color name="colorDivider">#E5E7EB</color>
+    
+    <!-- Semantic Colors -->
+    <color name="colorSuccess">#10B981</color>        <!-- Emerald -->
+    <color name="colorError">#EF4444</color>          <!-- Ruby Red -->
 </resources>
