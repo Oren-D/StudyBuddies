@@ -21,9 +21,45 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.auth.RegisterActivity" />
+
         <activity
             android:name=".ui.home.MainActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.home.DriveActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.home.SubjectFilesActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.home.FriendsActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.home.ProfileActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.home.RulesActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.home.ChatActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

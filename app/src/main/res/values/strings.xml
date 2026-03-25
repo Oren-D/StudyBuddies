@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">StudyBuddies</string>
+    <string name="login_title">StudyBuddies</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button_text">Login</string>
+    <string name="login_register_prompt">Don\'t have an account? Sign Up</string>
+    
+    <string name="register_title">Create Account</string>
+    <string name="register_button_text">Register</string>
+    <string name="register_login_prompt">Already have an account? Login</string>
+    
+    <!-- Dashboard UI Strings -->
+    <string name="dashboard_welcome">StudyBuddies</string>
+    <string name="dashboard_drive_button">Community Subjects</string>
+    <string name="dashboard_chat_button">Messages</string>
+    <string name="dashboard_logout">Log Out</string>
+    
+    <string name="chat_title">Study Chat</string>
+    <string name="chat_hint">Type a message...</string>
+    
+    <string name="drive_title">My Drive</string>
+    <string name="drive_empty_state">No files here yet.</string>
+    
+    <string name="error_required_field">This field is required</string>
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_short_password">Password must be at least 6 characters</string>
 </resources>
