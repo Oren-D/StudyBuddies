@@ -18,7 +18,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etPassword: TextInputEditText
     private lateinit var btnLogin: MaterialButton
     private lateinit var tvRegister: TextView
-    private lateinit var btnAdminLogin: MaterialButton
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +35,6 @@ class LoginActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
         tvRegister = findViewById(R.id.tvRegister)
-        btnAdminLogin = findViewById(R.id.btnAdminLogin)
     }
 
     private fun setupListeners() {
@@ -69,39 +67,5 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        btnAdminLogin.setOnClickListener {
-            btnAdminLogin.isEnabled = false
-            val adminEmail = "admin@studybuddies.com"
-            val adminPass = "admin123"
-            auth.signInWithEmailAndPassword(adminEmail, adminPass)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Admin Logged In", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                }
-                .addOnFailureListener {
-                    auth.createUserWithEmailAndPassword(adminEmail, adminPass)
-                        .addOnSuccessListener { result ->
-                            val user = result.user
-                            if (user != null) {
-                                val newUser = com.example.studybuddies.data.model.User(
-                                    uid = user.uid,
-                                    email = adminEmail,
-                                    displayName = "Administrator",
-                                    reputationPoints = 9999,
-                                    hasUploaded = true
-                                )
-                                FirebaseFirestore.getInstance().collection("users").document(user.uid).set(newUser)
-                                Toast.makeText(this, "Admin Created & Logged In", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, MainActivity::class.java))
-                                finish()
-                            }
-                        }
-                        .addOnFailureListener { e ->
-                            btnAdminLogin.isEnabled = true
-                            Toast.makeText(this, "Admin Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                }
-        }
     }
 }
