@@ -127,15 +127,58 @@
                 android:layout_weight="1"/>
                 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMyLibrary"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@color/colorPrimaryDark"
+                android:text="My Unlocked Vault"
+                android:textColor="@color/white"
+                app:icon="@android:drawable/ic_menu_agenda"
+                app:iconTint="@color/white"/>
+                
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRules"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:layout_marginHorizontal="24dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="24dp"
                 android:text="Community Guidelines"
                 app:strokeColor="@color/colorPrimary"
                 android:textColor="@color/colorPrimary"/>
+                
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="Settings"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary"/>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchDarkMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="16dp"
+                android:text="Dark Mode"
+                android:textSize="16sp"
+                android:textColor="@color/colorTextPrimary"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnClearCache"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginBottom="32dp"
+                android:text="Clear Image Cache"
+                app:strokeColor="@color/colorTextSecondary"
+                android:textColor="@color/colorTextSecondary"/>
                 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"

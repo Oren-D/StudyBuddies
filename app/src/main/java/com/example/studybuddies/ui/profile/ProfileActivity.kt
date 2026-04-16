@@ -1,5 +1,6 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.profile
 
+import com.example.studybuddies.ui.drive.MyLibraryActivity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -16,13 +17,17 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var tvProfileName: TextView
     private lateinit var tvProfileEmail: TextView
     private lateinit var tvReputation: TextView
+    private lateinit var btnMyLibrary: Button
     private lateinit var btnRules: Button
     private lateinit var btnLogout: Button
+    private lateinit var switchDarkMode: com.google.android.material.switchmaterial.SwitchMaterial
+    private lateinit var btnClearCache: Button
     private lateinit var ivProfilePicture: com.google.android.material.imageview.ShapeableImageView
     private lateinit var fabEditPicture: com.google.android.material.floatingactionbutton.FloatingActionButton
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
+    private var profileListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     private val pickImageLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
         if (uri != null) {
@@ -58,8 +63,11 @@ class ProfileActivity : AppCompatActivity() {
         tvProfileName = findViewById(R.id.tvProfileName)
         tvProfileEmail = findViewById(R.id.tvProfileEmail)
         tvReputation = findViewById(R.id.tvReputation)
+        btnMyLibrary = findViewById(R.id.btnMyLibrary)
         btnRules = findViewById(R.id.btnRules)
         btnLogout = findViewById(R.id.btnLogout)
+        switchDarkMode = findViewById(R.id.switchDarkMode)
+        btnClearCache = findViewById(R.id.btnClearCache)
         ivProfilePicture = findViewById(R.id.ivProfilePicture)
         fabEditPicture = findViewById(R.id.fabEditPicture)
 
@@ -69,8 +77,34 @@ class ProfileActivity : AppCompatActivity() {
             pickImageLauncher.launch("image/*")
         }
 
-        btnRules.setOnClickListener {
+        btnMyLibrary.setOnClickListener { view ->
+            view.isEnabled = false
+            view.postDelayed({ view.isEnabled = true }, 1000)
+            startActivity(Intent(this, MyLibraryActivity::class.java))
+        }
+
+        btnRules.setOnClickListener { view ->
+            view.isEnabled = false
+            view.postDelayed({ view.isEnabled = true }, 1000)
             startActivity(Intent(this, RulesActivity::class.java))
+        }
+
+        val prefs = getSharedPreferences("StudyBuddiesPrefs", android.content.Context.MODE_PRIVATE)
+        switchDarkMode.isChecked = prefs.getBoolean("dark_mode", false)
+
+        switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("dark_mode", isChecked).apply()
+            val mode = if (isChecked) androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES else androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(mode)
+        }
+
+        btnClearCache.setOnClickListener {
+            try {
+                cacheDir.deleteRecursively()
+                Toast.makeText(this, "Local cache cleared successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Failed to clear cache", Toast.LENGTH_SHORT).show()
+            }
         }
 
         btnLogout.setOnClickListener {
@@ -91,7 +125,7 @@ class ProfileActivity : AppCompatActivity() {
 
         tvProfileEmail.text = user.email
 
-        db.collection("users").document(user.uid).addSnapshotListener { snapshot, error ->
+        profileListener = db.collection("users").document(user.uid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show()
                 return@addSnapshotListener
@@ -113,5 +147,10 @@ class ProfileActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        profileListener?.remove()
     }
 }

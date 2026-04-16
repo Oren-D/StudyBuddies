@@ -6,7 +6,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studybuddies.R
-import com.example.studybuddies.ui.home.MainActivity
+import com.example.studybuddies.ui.dashboard.MainActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -41,7 +41,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
+            val email = etEmail.text.toString().trim().lowercase()
             val password = etPassword.text.toString().trim()
 
             if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -49,6 +49,7 @@ class LoginActivity : AppCompatActivity() {
             } else if (password.isEmpty()) {
                 etPassword.error = getString(R.string.error_required_field)
             } else {
+                btnLogin.isEnabled = false
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
@@ -56,6 +57,7 @@ class LoginActivity : AppCompatActivity() {
                             startActivity(intent)
                             finish()
                         } else {
+                            btnLogin.isEnabled = true
                             Toast.makeText(this@LoginActivity, "Login Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -68,6 +70,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         btnAdminLogin.setOnClickListener {
+            btnAdminLogin.isEnabled = false
             val adminEmail = "admin@studybuddies.com"
             val adminPass = "admin123"
             auth.signInWithEmailAndPassword(adminEmail, adminPass)
@@ -95,6 +98,7 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
                         .addOnFailureListener { e ->
+                            btnAdminLogin.isEnabled = true
                             Toast.makeText(this, "Admin Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                 }

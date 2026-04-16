@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.drive
 
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +15,7 @@ class SubjectDriveAdapter(
 
     class DriveViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvSubjectName: TextView = itemView.findViewById(R.id.tvSubjectName)
+        val tvFileCount: TextView = itemView.findViewById(R.id.tvFileCount)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DriveViewHolder {
@@ -25,8 +26,11 @@ class SubjectDriveAdapter(
     override fun onBindViewHolder(holder: DriveViewHolder, position: Int) {
         val drive = drives[position]
         holder.tvSubjectName.text = drive.name
+        holder.tvFileCount.text = "${drive.fileCount} items"
         
-        holder.itemView.setOnClickListener {
+        holder.itemView.setOnClickListener { view ->
+            view.isEnabled = false
+            view.postDelayed({ view.isEnabled = true }, 1000)
             onDriveClick(drive)
         }
     }

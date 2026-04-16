@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.profile
 
 import android.os.Bundle
 import android.widget.Button

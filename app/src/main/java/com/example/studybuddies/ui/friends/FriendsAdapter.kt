@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.friends
 
 import android.view.LayoutInflater
 import android.view.View
@@ -32,11 +32,15 @@ class FriendsAdapter(
         holder.tvFriendName.text = friend.displayName
         holder.tvFriendEmail.text = friend.email
         
-        holder.btnMessageFriend.setOnClickListener {
+        holder.btnMessageFriend.setOnClickListener { view ->
+            view.isEnabled = false
+            view.postDelayed({ view.isEnabled = true }, 1000)
             onMessageClick(friend)
         }
 
-        holder.btnRemoveFriend.setOnClickListener {
+        holder.btnRemoveFriend.setOnClickListener { view ->
+            view.isEnabled = false
+            view.postDelayed({ view.isEnabled = true }, 1000)
             onRemoveClick(friend)
         }
     }

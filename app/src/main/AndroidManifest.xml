@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -24,31 +27,39 @@
         <activity android:name=".ui.auth.RegisterActivity" />
 
         <activity
-            android:name=".ui.home.MainActivity"
+            android:name=".ui.dashboard.MainActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ui.home.DriveActivity"
+            android:name=".ui.drive.DriveActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.home.SubjectFilesActivity"
+            android:name=".ui.drive.SubjectFilesActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.home.FriendsActivity"
+            android:name=".ui.friends.FriendsActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.home.ProfileActivity"
+            android:name=".ui.profile.ProfileActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.home.RulesActivity"
+            android:name=".ui.profile.RulesActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.home.ChatActivity"
+            android:name=".ui.chat.ChatActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.leaderboard.LeaderboardActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".ui.drive.MyLibraryActivity"
             android:exported="false" />
 
         <provider

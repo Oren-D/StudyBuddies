@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Modern Clean Blue Theme (Dark Variant) -->
+    <color name="colorPrimary">#8AB4F8</color> <!-- Lighter blue for dark mode readability -->
+    <color name="colorPrimaryDark">#1A73E8</color>
+    <color name="colorAccent">#3C4043</color>
+    
+    <!-- Real Dark Mode Environments -->
+    <color name="colorBackground">#121212</color>          <!-- Pitch Dark Background -->
+    <color name="colorSurface">#1E1E1E</color>             <!-- Floating Dark Surface -->
+    <color name="colorTextPrimary">#E8EAED</color>         <!-- Crisp White Text -->
+    <color name="colorTextSecondary">#9AA0A6</color>       <!-- Softer Gray Text -->
+    <color name="colorDivider">#3C4043</color>             <!-- Subtle Outline -->
+    
+    <!-- Semantic Colors -->
+    <color name="colorSuccess">#34D399</color>
+    <color name="colorError">#F87171</color>
+</resources>

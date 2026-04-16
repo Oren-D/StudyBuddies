@@ -7,7 +7,10 @@ data class DriveFile(
     val uploaderId: String = "",
     val uploaderName: String = "",
     val driveId: String = "", // The subject folder it belongs to
+    val description: String = "", // User provided short description 
     val timestamp: Long = System.currentTimeMillis(),
     val likes: List<String> = emptyList(), // List of User UIDs who liked
-    val reports: Int = 0 // Number of times this file was reported
+    val reportedBy: List<String> = emptyList(), // List of User UIDs who reported this file
+    val unlockedBy: List<String> = emptyList(), // List of User UIDs who paid to unlock this file
+    val commentCount: Int = 0
 )

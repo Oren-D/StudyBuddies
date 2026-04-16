@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.drive
 
 import android.content.Intent
 import android.os.Bundle
@@ -27,6 +27,7 @@ class DriveActivity : AppCompatActivity() {
     private val db by lazy { FirebaseFirestore.getInstance() }
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val drivesList = mutableListOf<SubjectDrive>()
+    private var driveListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,7 @@ class DriveActivity : AppCompatActivity() {
     }
 
     private fun setupFirestoreListener() {
-        db.collection("subject_drives")
+        driveListener = db.collection("subject_drives")
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -122,5 +123,10 @@ class DriveActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed to create drive: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        driveListener?.remove()
     }
 }

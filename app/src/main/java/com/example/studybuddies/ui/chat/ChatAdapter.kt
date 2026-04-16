@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.chat
 
 import android.view.LayoutInflater
 import android.view.View

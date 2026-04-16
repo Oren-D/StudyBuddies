@@ -28,7 +28,7 @@ class RegisterActivity : AppCompatActivity() {
         val tvLogin = findViewById<TextView>(R.id.tvLogin)
 
         btnRegister.setOnClickListener {
-            val email = etEmail.text.toString().trim()
+            val email = etEmail.text.toString().trim().lowercase()
             val password = etPassword.text.toString().trim()
 
             if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -48,7 +48,7 @@ class RegisterActivity : AppCompatActivity() {
                         if (user != null) {
                             val newUser = User(
                                 uid = user.uid,
-                                email = user.email ?: email,
+                                email = email,
                                 displayName = email.substringBefore("@"),
                                 reputationPoints = 100
                             )

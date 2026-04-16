@@ -17,21 +17,12 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_gallery"
-            app:tint="@color/colorAccent"
-            android:background="@drawable/bg_premium_gradient"
-            android:padding="10dp"
-            android:backgroundTint="#20000000"/>
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="16dp">
+            android:layout_marginStart="8dp">
 
             <TextView
                 android:id="@+id/tvSubjectName"
@@ -43,9 +34,10 @@
                 android:textColor="@color/colorTextPrimary"/>
 
             <TextView
+                android:id="@+id/tvFileCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tap to view files"
+                android:text="0 files inside"
                 android:textSize="14sp"
                 android:textColor="@color/colorTextSecondary"
                 android:layout_marginTop="4dp"/>

@@ -1,4 +1,4 @@
-package com.example.studybuddies.ui.home
+package com.example.studybuddies.ui.chat
 
 import android.os.Bundle
 import android.widget.EditText
@@ -27,6 +27,7 @@ class ChatActivity : AppCompatActivity() {
     private var targetUid: String = ""
     private var targetName: String = ""
     private var chatId: String = ""
+    private var chatListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +43,7 @@ class ChatActivity : AppCompatActivity() {
             return
         }
 
-        chatId = if (myUid < targetUid) "${myUid}_$targetUid" else "${targetUid}_$myUid"
+        chatId = if (targetUid == "GLOBAL_CHAT") "GLOBAL_CHAT" else if (myUid < targetUid) "${myUid}_$targetUid" else "${targetUid}_$myUid"
 
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -71,7 +72,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun setupFirestoreListener() {
-        db.collection("chats").document(chatId).collection("messages")
+        chatListener = db.collection("chats").document(chatId).collection("messages")
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -107,9 +108,22 @@ class ChatActivity : AppCompatActivity() {
         messageRef.set(finalMessage)
             .addOnSuccessListener {
                 etMessage.text.clear()
+                
+                if (targetUid != "GLOBAL_CHAT") {
+                    val notif = hashMapOf(
+                        "title" to "New message from ${user.email ?: "Unknown"}", 
+                        "message" to text
+                    )
+                    db.collection("users").document(targetUid).collection("notifications").add(notif)
+                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed to send: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        chatListener?.remove()
     }
 }
