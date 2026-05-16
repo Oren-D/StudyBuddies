@@ -34,19 +34,19 @@ class LeaderboardAdapter(private val users: List<User>) : RecyclerView.Adapter<L
         
         when (rank) {
             1 -> {
-                holder.tvRank.setTextColor(Color.parseColor("#D4AF37")) // Gold
+                holder.tvRank.setTextColor(Color.parseColor("#D4AF37"))
                 holder.tvBadge.text = "🏆 Elite Contributor"
                 holder.tvBadge.visibility = View.VISIBLE
                 holder.tvBadge.setTextColor(Color.parseColor("#D4AF37"))
             }
             2 -> {
-                holder.tvRank.setTextColor(Color.parseColor("#C0C0C0")) // Silver
+                holder.tvRank.setTextColor(Color.parseColor("#C0C0C0"))
                 holder.tvBadge.text = "🥈 Pro Tutor"
                 holder.tvBadge.visibility = View.VISIBLE
                 holder.tvBadge.setTextColor(Color.parseColor("#C0C0C0"))
             }
             3 -> {
-                holder.tvRank.setTextColor(Color.parseColor("#CD7F32")) // Bronze
+                holder.tvRank.setTextColor(Color.parseColor("#CD7F32"))
                 holder.tvBadge.text = "🥉 Rising Star"
                 holder.tvBadge.visibility = View.VISIBLE
                 holder.tvBadge.setTextColor(Color.parseColor("#CD7F32"))

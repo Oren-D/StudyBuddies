@@ -22,6 +22,7 @@ class DriveActivity : AppCompatActivity() {
 
     private lateinit var rvFiles: RecyclerView
     private lateinit var tvEmptyState: TextView
+    private lateinit var etSearchDrive: EditText
     private lateinit var subjectDriveAdapter: SubjectDriveAdapter
 
     private val db by lazy { FirebaseFirestore.getInstance() }
@@ -40,6 +41,15 @@ class DriveActivity : AppCompatActivity() {
 
         rvFiles = findViewById(R.id.rvFiles)
         tvEmptyState = findViewById(R.id.tvEmptyState)
+        etSearchDrive = findViewById(R.id.etSearchDrive)
+
+        etSearchDrive.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                filterDrives(s.toString())
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
 
         subjectDriveAdapter = SubjectDriveAdapter(drivesList) { drive ->
             val intent = Intent(this, SubjectFilesActivity::class.java).apply {
@@ -72,7 +82,7 @@ class DriveActivity : AppCompatActivity() {
                     val fetchedDrives = snapshot.toObjects(SubjectDrive::class.java)
                     drivesList.clear()
                     drivesList.addAll(fetchedDrives)
-                    subjectDriveAdapter.notifyDataSetChanged()
+                    filterDrives(etSearchDrive.text.toString())
                     updateEmptyState()
                 }
             }
@@ -85,6 +95,17 @@ class DriveActivity : AppCompatActivity() {
         } else {
             tvEmptyState.visibility = View.GONE
             rvFiles.visibility = View.VISIBLE
+        }
+    }
+
+    private fun filterDrives(query: String) {
+        if (query.isEmpty()) {
+            subjectDriveAdapter.updateList(drivesList)
+        } else {
+            val filteredList = drivesList.filter { 
+                it.name.contains(query, ignoreCase = true) 
+            }
+            subjectDriveAdapter.updateList(filteredList)
         }
     }
 

@@ -22,6 +22,17 @@
                 app:title="@string/drive_title" />
         </com.google.android.material.appbar.AppBarLayout>
 
+        <EditText
+            android:id="@+id/etSearchDrive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:hint="Search Subject Drives..."
+            android:padding="12dp"
+            android:background="@android:drawable/editbox_background"
+            android:maxLines="1"
+            android:singleLine="true"/>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"

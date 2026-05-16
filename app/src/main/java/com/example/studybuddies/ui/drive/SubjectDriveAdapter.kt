@@ -9,9 +9,14 @@ import com.example.studybuddies.R
 import com.example.studybuddies.data.model.SubjectDrive
 
 class SubjectDriveAdapter(
-    private val drives: List<SubjectDrive>,
+    private var drives: List<SubjectDrive>,
     private val onDriveClick: (SubjectDrive) -> Unit
 ) : RecyclerView.Adapter<SubjectDriveAdapter.DriveViewHolder>() {
+
+    fun updateList(newList: List<SubjectDrive>) {
+        drives = newList
+        notifyDataSetChanged()
+    }
 
     class DriveViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvSubjectName: TextView = itemView.findViewById(R.id.tvSubjectName)

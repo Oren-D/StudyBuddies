@@ -4,8 +4,8 @@ data class User(
     val uid: String = "",
     val email: String = "",
     val displayName: String = "",
-    val friends: List<String> = emptyList(), // List of UIDs of friends
-    val friendRequests: List<String> = emptyList(), // UIDs that sent a request
+    val friends: List<String> = emptyList(),
+    val friendRequests: List<String> = emptyList(),
     val reputationPoints: Int = 100,
     val hasUploaded: Boolean = false,
     val isBanned: Boolean = false,

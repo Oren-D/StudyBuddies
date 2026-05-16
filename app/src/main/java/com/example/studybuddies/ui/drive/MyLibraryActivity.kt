@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.studybuddies.BuildConfig
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.DriveFile
 import com.example.studybuddies.data.model.User
@@ -29,10 +30,14 @@ class MyLibraryActivity : AppCompatActivity() {
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
     private var libraryListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private lateinit var geminiManager: GeminiManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_library)
+
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        geminiManager = GeminiManager(if (apiKey == "null") "" else apiKey)
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -51,7 +56,7 @@ class MyLibraryActivity : AppCompatActivity() {
             onCommentClick = { file -> showCommentsDialog(file) },
             onReportClick = { _ -> Toast.makeText(this, "Cannot report from vault.", Toast.LENGTH_SHORT).show() },
             onDeleteClick = { _ -> },
-            onAnalyzeClick = { file -> analyzeFileMock(file) }
+            onAnalyzeClick = { file -> analyzeFile(file) }
         )
         rvLibraryFiles.layoutManager = LinearLayoutManager(this)
         rvLibraryFiles.adapter = driveAdapter
@@ -179,7 +184,17 @@ class MyLibraryActivity : AppCompatActivity() {
         }
     }
     
-    private fun analyzeFileMock(file: DriveFile) {
+    private fun analyzeFile(file: DriveFile) {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isEmpty() || apiKey == "null") {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("API Key Missing")
+                .setMessage("Please ensure your API Key is correctly injected into BuildConfig.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+
         val dialogView = layoutInflater.inflate(R.layout.dialog_ai_summary, null)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
@@ -188,65 +203,16 @@ class MyLibraryActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val apiKey = com.example.studybuddies.BuildConfig.GEMINI_API_KEY
-                if (apiKey.isEmpty() || apiKey == "null") {
-                    withContext(Dispatchers.Main) {
-                        dialog.dismiss()
-                        androidx.appcompat.app.AlertDialog.Builder(this@MyLibraryActivity)
-                            .setTitle("API Key Missing")
-                            .setMessage("Please ensure your API Key is correctly injected into BuildConfig.")
-                            .setPositiveButton("OK", null)
-                            .show()
-                    }
-                    return@launch
+                val summaryText = geminiManager.analyzeFile(file, true, contentResolver)
+                
+                withContext(Dispatchers.Main) {
+                    dialog.dismiss()
+                    androidx.appcompat.app.AlertDialog.Builder(this@MyLibraryActivity)
+                        .setTitle("✨ AI Smart Summary")
+                        .setMessage(summaryText)
+                        .setPositiveButton("Awesome!") { _, _ -> }
+                        .show()
                 }
-                
-                val generativeModel = com.google.ai.client.generativeai.GenerativeModel(
-                    modelName = "gemini-flash-latest",
-                    apiKey = apiKey
-                )
-                
-                val safeDesc = if (file.description.isBlank()) "No description provided." else file.description
-                val promptText = "Accurately describe exactly what you see in the provided file in no more than 3 sentences. If it is an academic document or notes, summarize the core concepts and answers. If it is just an everyday object (like a soda can) or unrelated to school, realistically state what it is without inventing any academic meaning or experiments. Additional context: '$safeDesc'."
-                
-                val response = withContext(Dispatchers.IO) {
-                    val isImage = file.name.endsWith(".jpg", true) || file.name.endsWith(".png", true) || file.name.endsWith(".jpeg", true)
-                    
-                    if (isImage) {
-                        try {
-                            val bitmap = if (file.downloadUrl.startsWith("http")) {
-                                val inputStream = java.net.URL(file.downloadUrl).openStream()
-                                android.graphics.BitmapFactory.decodeStream(inputStream)
-                            } else {
-                                val uri = android.net.Uri.parse(file.downloadUrl)
-                                contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it) }
-                            }
-                            
-                            if (bitmap != null) {
-                                val inputContent = com.google.ai.client.generativeai.type.content {
-                                    image(bitmap)
-                                    text(promptText)
-                                }
-                                generativeModel.generateContent(inputContent)
-                            } else {
-                                generativeModel.generateContent(promptText)
-                            }
-                        } catch (e: Exception) {
-                            generativeModel.generateContent(promptText)
-                        }
-                    } else {
-                        generativeModel.generateContent(promptText)
-                    }
-                }
-
-                dialog.dismiss()
-                val summaryText = response.text ?: "Could not generate summary."
-                
-                androidx.appcompat.app.AlertDialog.Builder(this@MyLibraryActivity)
-                    .setTitle("✨ AI Smart Summary")
-                    .setMessage(summaryText)
-                    .setPositiveButton("Awesome!") { _, _ -> }
-                    .show()
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     dialog.dismiss()
