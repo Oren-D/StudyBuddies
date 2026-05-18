@@ -96,18 +96,38 @@ class SubjectFilesManager(private val driveId: String) {
         }
     }
 
+    private fun deleteFileDocumentWithComments(fileId: String, onComplete: (Boolean) -> Unit) {
+        val commentsRef = db.collection("files").document(fileId).collection("comments")
+        commentsRef.get().addOnSuccessListener { querySnapshot ->
+            val batch = db.batch()
+            for (doc in querySnapshot.documents) {
+                batch.delete(doc.reference)
+            }
+            batch.delete(db.collection("files").document(fileId))
+            batch.commit()
+                .addOnSuccessListener { onComplete(true) }
+                .addOnFailureListener { onComplete(false) }
+        }.addOnFailureListener {
+            db.collection("files").document(fileId).delete()
+                .addOnSuccessListener { onComplete(true) }
+                .addOnFailureListener { onComplete(false) }
+        }
+    }
+
     fun deleteFile(file: DriveFile, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         try {
             storage.getReferenceFromUrl(file.downloadUrl).delete()
         } catch (e: Exception) {}
 
-        db.collection("files").document(file.id).delete()
-            .addOnSuccessListener {
+        deleteFileDocumentWithComments(file.id) { success ->
+            if (success) {
                 db.collection("subject_drives").document(driveId)
                     .set(hashMapOf("fileCount" to FieldValue.increment(-1)), SetOptions.merge())
                 onSuccess()
+            } else {
+                onFailure(Exception("Failed to delete file database records."))
             }
-            .addOnFailureListener { onFailure(it) }
+        }
     }
 
     fun reportFile(file: DriveFile, currentUserId: String, onReported: () -> Unit, onDeleted: () -> Unit) {
@@ -117,9 +137,12 @@ class SubjectFilesManager(private val driveId: String) {
         if (newReportCount > 3) {
             try { storage.getReferenceFromUrl(file.downloadUrl).delete() } catch (e: Exception) {}
             
-            db.collection("files").document(file.id).delete()
-            db.collection("subject_drives").document(driveId)
-                .set(hashMapOf("fileCount" to FieldValue.increment(-1)), SetOptions.merge())
+            deleteFileDocumentWithComments(file.id) { success ->
+                if (success) {
+                    db.collection("subject_drives").document(driveId)
+                        .set(hashMapOf("fileCount" to FieldValue.increment(-1)), SetOptions.merge())
+                }
+            }
             
             val userRef = db.collection("users").document(file.uploaderId)
             db.runTransaction { transaction ->
