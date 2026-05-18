@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.DriveFile
 
-class DriveAdapter(//Gets the files list from FireBase through IDriveManager and shows them to the user
+class DriveAdapter(//Takes the files list and displays them as scrollable rows on the screen
     private val files: MutableList<DriveFile>,
     private val currentUserId: String,
     private val onDownloadClick: (DriveFile) -> Unit,

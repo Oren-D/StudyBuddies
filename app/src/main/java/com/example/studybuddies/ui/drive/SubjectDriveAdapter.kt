@@ -8,8 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.SubjectDrive
 
-//Handles all Subject Drives from FireBase through IDriveManager and gets them to the app
-//Also presents them by order and listens for clicks to show them to user
+//Takes the subject drives list and displays them as folders on the screen
+//Also presents them by order and listens for clicks to open them
 
 class SubjectDriveAdapter(
     private var drives: List<SubjectDrive>,

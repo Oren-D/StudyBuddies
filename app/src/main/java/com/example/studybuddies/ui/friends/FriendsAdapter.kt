@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.User
 
-//Gets friends from Firebase and displays them as a list for FriendsActivity
+//Takes the friends list and displays them as scrollable rows for FriendsActivity
 class FriendsAdapter(
     private val friends: List<User>,
     private val onMessageClick: (User) -> Unit,
