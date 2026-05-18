@@ -8,7 +8,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studybuddies.R
-import com.example.studybuddies.data.model.User
 import com.example.studybuddies.ui.dashboard.MainActivity
 
 /**
