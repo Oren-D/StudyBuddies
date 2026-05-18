@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.User
 
+//Displays incoming friends request,pending etc... and passed them to FriendsActivity
 class RequestsAdapter(
     private val requestsList: List<User>,
     private val onAcceptClick: (User) -> Unit,

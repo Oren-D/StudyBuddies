@@ -9,22 +9,31 @@ import com.example.studybuddies.R
 import com.example.studybuddies.ui.dashboard.MainActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * This screen handles user login.
+ *
+ */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var etEmail: TextInputEditText
     private lateinit var etPassword: TextInputEditText
     private lateinit var btnLogin: MaterialButton
     private lateinit var tvRegister: TextView
-    private lateinit var auth: FirebaseAuth
+    private lateinit var authManager: IAuthenticationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        
+        authManager = FirebaseAuthenticationManager() //create auth manager object
+        
+        if (authManager.isLoggedIn()) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
 
-        auth = FirebaseAuth.getInstance()
+        setContentView(R.layout.activity_login)
 
         initViews()
         setupListeners()
@@ -48,23 +57,23 @@ class LoginActivity : AppCompatActivity() {
                 etPassword.error = getString(R.string.error_required_field)
             } else {
                 btnLogin.isEnabled = false
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                            startActivity(intent)
-                            finish()
-                        } else {
-                            btnLogin.isEnabled = true
-                            Toast.makeText(this@LoginActivity, "Login Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                        }
+                authManager.login(email, password) { isSuccess, errorMsg ->
+                    if (isSuccess) {
+                        val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        btnLogin.isEnabled = true
+                        Toast.makeText(this@LoginActivity, "Login Failed: $errorMsg", Toast.LENGTH_SHORT).show()
                     }
+                }
             }
         }
 
-        tvRegister.setOnClickListener {
+        tvRegister.setOnClickListener { //register button
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
     }

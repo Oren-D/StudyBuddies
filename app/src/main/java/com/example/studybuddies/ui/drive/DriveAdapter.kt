@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.DriveFile
 
-class DriveAdapter(
+class DriveAdapter(//Gets the subjects list from FireBase through IdriveManager and shows them to the user
     private val files: MutableList<DriveFile>,
     private val currentUserId: String,
     private val onDownloadClick: (DriveFile) -> Unit,

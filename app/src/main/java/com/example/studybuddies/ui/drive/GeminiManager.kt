@@ -10,13 +10,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
 
+/**
+ * Handles talking to the Google Gemini AI..
+ */
 class GeminiManager(private val apiKey: String) {
+
 
     suspend fun analyzeFile(file: DriveFile, isUnlocked: Boolean, contentResolver: ContentResolver): String {
         return withContext(Dispatchers.IO) {
             val generativeModel = GenerativeModel(
                 modelName = "gemini-flash-latest",
-                apiKey = apiKey
+                apiKey = apiKey//on suspend because Gemini is super slow, and it killed my app
             )
             
             val safeDesc = if (file.description.isBlank()) "No description provided." else file.description

@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.User
+//Pure display , Gets leaderboard from FireBase and displays it
 
 class LeaderboardAdapter(private val users: List<User>) : RecyclerView.Adapter<LeaderboardAdapter.LeaderboardViewHolder>() {
 

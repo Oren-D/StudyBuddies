@@ -8,6 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.SubjectDrive
 
+//Handles all Subject Drives from FireBase through IDriveManager and gets them to the app
+//Also presents them by order and listens for clicks to show them to user
+
 class SubjectDriveAdapter(
     private var drives: List<SubjectDrive>,
     private val onDriveClick: (SubjectDrive) -> Unit
@@ -33,7 +36,7 @@ class SubjectDriveAdapter(
         holder.tvSubjectName.text = drive.name
         holder.tvFileCount.text = "${drive.fileCount} items"
         
-        holder.itemView.setOnClickListener { view ->
+        holder.itemView.setOnClickListener { view ->//Double click Protection
             view.isEnabled = false
             view.postDelayed({ view.isEnabled = true }, 1000)
             onDriveClick(drive)

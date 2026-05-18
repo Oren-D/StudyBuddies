@@ -18,13 +18,19 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.example.studybuddies.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.studybuddies.ui.auth.FirebaseAuthenticationManager
+import com.example.studybuddies.ui.auth.IAuthenticationManager
+import com.example.studybuddies.ui.profile.FirebaseUserManager
+import com.example.studybuddies.ui.profile.IUserManager
 
+/**
+ * The main dashboard screen of the app.
+ * It listens for notifications and point updates using IUserManager.
+ */
 class MainActivity : AppCompatActivity() {
 
-    private var pointsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
-    private var queueListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private lateinit var userManager: IUserManager
+    private lateinit var authManager: IAuthenticationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +42,8 @@ class MainActivity : AppCompatActivity() {
         
         setContentView(R.layout.activity_main)
 
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            return
-        }
+        authManager = FirebaseAuthenticationManager()
+        userManager = FirebaseUserManager()
 
         findViewById<View>(R.id.cardDrive).setOnClickListener { view ->
             view.isEnabled = false
@@ -80,28 +83,22 @@ class MainActivity : AppCompatActivity() {
         listenForQueue()
     }
     
-    private fun listenForQueue() {
-        val user = FirebaseAuth.getInstance().currentUser ?: return
-        queueListenerRegistration = FirebaseFirestore.getInstance().collection("users").document(user.uid)
-            .collection("notifications")
-            .addSnapshotListener { snapshot, _ ->
-                if (snapshot != null) {
-                    for (dc in snapshot.documentChanges) {
-                        if (dc.type == com.google.firebase.firestore.DocumentChange.Type.ADDED) {
-                            val data = dc.document.data
-                            val title = data["title"] as? String ?: "StudyBuddies Alert"
-                            val msg = data["message"] as? String ?: ""
-                            
-                            showSystemNotification(title, msg)
-                            
-                            dc.document.reference.delete()
-                        }
-                    }
-                }
-            }
+    override fun onResume() {
+        super.onResume()
+        if (!authManager.isLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
     
-    private fun showSystemNotification(title: String, message: String) {
+    private fun listenForQueue() {
+        userManager.listenForNotifications { title, message ->
+            showSystemNotification(title, message)
+        }
+    }
+    
+
+    private fun showSystemNotification(title: String, message: String) {//Android alerts
         val channelId = "system_events"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -110,8 +107,14 @@ class MainActivity : AppCompatActivity() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val intent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val targetClass = if (title.contains("Friend", ignoreCase = true) || title.contains("Request", ignoreCase = true)) {
+            FriendsActivity::class.java
+        } else {
+            MainActivity::class.java
+        }
+
+        val intent = Intent(this, targetClass)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -126,26 +129,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun listenForPoints() {
-        val user = FirebaseAuth.getInstance().currentUser ?: return
         var lastPoints = -1
         
-        pointsListenerRegistration = FirebaseFirestore.getInstance().collection("users").document(user.uid)
-            .addSnapshotListener { document, _ ->
-                if (document != null && document.exists()) {
-                    val currentPoints = document.getLong("reputationPoints")?.toInt() ?: 100
-                    if (lastPoints != -1 && currentPoints > lastPoints) {
-                        val pointsEarned = currentPoints - lastPoints
-                        showNotification(pointsEarned)
-                    }
-                    lastPoints = currentPoints
+        userManager.listenToUserProfile { user, error ->
+            if (user != null) {
+                val currentPoints = user.reputationPoints
+                if (lastPoints != -1 && currentPoints > lastPoints) {
+                    val pointsEarned = currentPoints - lastPoints
+                    showNotification(pointsEarned)
                 }
+                lastPoints = currentPoints
             }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        pointsListenerRegistration?.remove()
-        queueListenerRegistration?.remove()
+        userManager.cleanup()
     }
 
     private fun showNotification(pointsEarned: Int) {
@@ -158,7 +158,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val intent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.btn_star_big_on)

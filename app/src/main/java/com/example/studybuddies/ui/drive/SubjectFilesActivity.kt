@@ -28,6 +28,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * This screen shows the files inside a specific Subject Drive.
+ * It uses SubjectFilesManager to handle uploading and downloading files.
+ */
+
 class SubjectFilesActivity : AppCompatActivity() {
 
     private lateinit var rvFiles: RecyclerView

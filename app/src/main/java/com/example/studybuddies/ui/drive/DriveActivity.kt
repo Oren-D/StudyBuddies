@@ -13,11 +13,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.SubjectDrive
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.util.UUID
 
+/**
+ * This screen shows the list of Subject Drives (like folders).
+ * It uses IDriveManager to fetch them from the database.
+ */
 class DriveActivity : AppCompatActivity() {
 
     private lateinit var rvFiles: RecyclerView
@@ -25,10 +26,8 @@ class DriveActivity : AppCompatActivity() {
     private lateinit var etSearchDrive: EditText
     private lateinit var subjectDriveAdapter: SubjectDriveAdapter
 
-    private val db by lazy { FirebaseFirestore.getInstance() }
-    private val auth by lazy { FirebaseAuth.getInstance() }
+    private lateinit var driveManager: IDriveManager
     private val drivesList = mutableListOf<SubjectDrive>()
-    private var driveListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +37,8 @@ class DriveActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
+
+        driveManager = FirebaseDriveManager()
 
         rvFiles = findViewById(R.id.rvFiles)
         tvEmptyState = findViewById(R.id.tvEmptyState)
@@ -70,22 +71,19 @@ class DriveActivity : AppCompatActivity() {
     }
 
     private fun setupFirestoreListener() {
-        driveListener = db.collection("subject_drives")
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Toast.makeText(this, "Listen failed: ${error.message}", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val fetchedDrives = snapshot.toObjects(SubjectDrive::class.java)
-                    drivesList.clear()
-                    drivesList.addAll(fetchedDrives)
-                    filterDrives(etSearchDrive.text.toString())
-                    updateEmptyState()
-                }
+        driveManager.listenToSubjectDrives { drives, error ->
+            if (error != null) {
+                Toast.makeText(this, "Could not get any Subjects due to: ${error.message}", Toast.LENGTH_SHORT).show()
+                return@listenToSubjectDrives
             }
+
+            if (drives != null) {
+                drivesList.clear()
+                drivesList.addAll(drives)
+                filterDrives(etSearchDrive.text.toString())
+                updateEmptyState()
+            }
+        }
     }
 
     private fun updateEmptyState() {
@@ -127,27 +125,17 @@ class DriveActivity : AppCompatActivity() {
     }
 
     private fun createDriveInFirestore(subjectName: String) {
-        val user = auth.currentUser ?: return
-        val docRef = db.collection("subject_drives").document()
-        
-        val newDrive = SubjectDrive(
-            id = docRef.id,
-            name = subjectName,
-            creatorUid = user.uid,
-            timestamp = System.currentTimeMillis()
-        )
-
-        docRef.set(newDrive)
-            .addOnSuccessListener {
+        driveManager.createSubjectDrive(subjectName) { success, errorMsg ->
+            if (success) {
                 Toast.makeText(this, "Subject Drive created!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Failed to create drive: $errorMsg", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to create drive: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        driveListener?.remove()
+        driveManager.cleanup()
     }
 }

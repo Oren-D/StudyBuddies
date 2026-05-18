@@ -14,11 +14,14 @@ import com.example.studybuddies.BuildConfig
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.DriveFile
 import com.example.studybuddies.data.model.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/**
+ * This screen shows all the study files you have unlocked.
+ * It uses IDriveManager to get the data.
+ */
 
 class MyLibraryActivity : AppCompatActivity() {
 
@@ -27,9 +30,7 @@ class MyLibraryActivity : AppCompatActivity() {
     private lateinit var driveAdapter: DriveAdapter
     private val filesList = mutableListOf<DriveFile>()
     
-    private val auth by lazy { FirebaseAuth.getInstance() }
-    private val db by lazy { FirebaseFirestore.getInstance() }
-    private var libraryListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private lateinit var driveManager: IDriveManager
     private lateinit var geminiManager: GeminiManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +49,9 @@ class MyLibraryActivity : AppCompatActivity() {
         rvLibraryFiles = findViewById(R.id.rvLibraryFiles)
         tvEmptyState = findViewById(R.id.tvEmptyState)
 
-        val uId = auth.currentUser?.uid ?: return
+        driveManager = FirebaseDriveManager()
+
+        val uId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
         
         driveAdapter = DriveAdapter(filesList, uId, 
             onDownloadClick = { file -> openFileIntent(file) },
@@ -65,27 +68,26 @@ class MyLibraryActivity : AppCompatActivity() {
     }
 
     private fun loadLibrary(uId: String) {
-        libraryListener = db.collection("files").whereArrayContains("unlockedBy", uId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Toast.makeText(this, "Failed to load library", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
+        driveManager.listenToMyLibraryFiles { files, error ->
+            if (error != null) {
+                Toast.makeText(this, "Failed to load library", Toast.LENGTH_SHORT).show()
+                return@listenToMyLibraryFiles
+            }
+            
+            if (files != null) {
+                filesList.clear()
+                filesList.addAll(files)
+                driveAdapter.notifyDataSetChanged()
                 
-                if (snapshot != null) {
-                    filesList.clear()
-                    filesList.addAll(snapshot.toObjects(DriveFile::class.java))
-                    driveAdapter.notifyDataSetChanged()
-                    
-                    if (filesList.isEmpty()) {
-                        tvEmptyState.visibility = View.VISIBLE
-                        rvLibraryFiles.visibility = View.GONE
-                    } else {
-                        tvEmptyState.visibility = View.GONE
-                        rvLibraryFiles.visibility = View.VISIBLE
-                    }
+                if (filesList.isEmpty()) {
+                    tvEmptyState.visibility = View.VISIBLE
+                    rvLibraryFiles.visibility = View.GONE
+                } else {
+                    tvEmptyState.visibility = View.GONE
+                    rvLibraryFiles.visibility = View.VISIBLE
                 }
             }
+        }
     }
     
     private fun openFileIntent(file: DriveFile) {
@@ -101,18 +103,7 @@ class MyLibraryActivity : AppCompatActivity() {
     }
 
     private fun toggleLike(file: DriveFile, userId: String) {
-        if (file.uploaderId == userId) {
-            Toast.makeText(this, "You cannot like your own file!", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val docRef = db.collection("files").document(file.id)
-        if (file.likes.contains(userId)) {
-            docRef.update("likes", com.google.firebase.firestore.FieldValue.arrayRemove(userId))
-        } else {
-            docRef.update("likes", com.google.firebase.firestore.FieldValue.arrayUnion(userId))
-            db.collection("users").document(file.uploaderId)
-                .set(hashMapOf("reputationPoints" to com.google.firebase.firestore.FieldValue.increment(1)), com.google.firebase.firestore.SetOptions.merge())
+        driveManager.toggleLike(file) { success ->
         }
     }
 
@@ -133,58 +124,39 @@ class MyLibraryActivity : AppCompatActivity() {
             .setCancelable(true)
             .show()
             
-        val commentsRef = db.collection("files").document(file.id).collection("comments")
-        val listener = commentsRef.orderBy("timestamp", com.google.firebase.firestore.Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (snapshot != null) {
-                    val fetched = snapshot.toObjects(com.example.studybuddies.data.model.Comment::class.java)
-                    commentsList.clear()
-                    commentsList.addAll(fetched)
-                    commentsAdapter.notifyDataSetChanged()
-                    
-                    if (commentsList.isEmpty()) {
-                        tvNoComments.visibility = android.view.View.VISIBLE
-                        rvComments.visibility = android.view.View.GONE
-                    } else {
-                        tvNoComments.visibility = android.view.View.GONE
-                        rvComments.visibility = android.view.View.VISIBLE
-                        rvComments.scrollToPosition(commentsList.size - 1)
-                    }
+        driveManager.listenToComments(file.id) { comments, error ->
+            if (comments != null) {
+                commentsList.clear()
+                commentsList.addAll(comments)
+                commentsAdapter.notifyDataSetChanged()
+                
+                if (commentsList.isEmpty()) {
+                    tvNoComments.visibility = android.view.View.VISIBLE
+                    rvComments.visibility = android.view.View.GONE
+                } else {
+                    tvNoComments.visibility = android.view.View.GONE
+                    rvComments.visibility = android.view.View.VISIBLE
+                    rvComments.scrollToPosition(commentsList.size - 1)
                 }
             }
-            
-        dialog.setOnDismissListener {
-            listener.remove()
         }
-        
+            
         btnSendComment.setOnClickListener { view ->
             view.isEnabled = false
             view.postDelayed({ view.isEnabled = true }, 500)
             
             val content = etCommentInput.text.toString().trim()
             if (content.isNotEmpty()) {
-                val newRef = commentsRef.document()
-                db.collection("users").document(auth.currentUser?.uid ?: "").get()
-                    .addOnSuccessListener { doc ->
-                        val authorNameStr = doc.getString("displayName") ?: auth.currentUser?.email ?: "Unknown"
-                        val comment = com.example.studybuddies.data.model.Comment(
-                            id = newRef.id,
-                            fileId = file.id,
-                            authorUid = auth.currentUser?.uid ?: "",
-                            authorName = authorNameStr,
-                            content = content
-                        )
-                        newRef.set(comment).addOnSuccessListener {
-                            etCommentInput.text.clear()
-                            db.collection("files").document(file.id)
-                                .set(hashMapOf("commentCount" to com.google.firebase.firestore.FieldValue.increment(1)), com.google.firebase.firestore.SetOptions.merge())
-                        }
+                driveManager.postComment(file.id, content) { success ->
+                    if (success) {
+                        etCommentInput.text.clear()
                     }
+                }
             }
         }
     }
     
-    private fun analyzeFile(file: DriveFile) {
+    private fun analyzeFile(file: DriveFile) {//Analyze file using Gemini AI NEEDS REAL API KEY!!!
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isEmpty() || apiKey == "null") {
             androidx.appcompat.app.AlertDialog.Builder(this)
@@ -228,6 +200,6 @@ class MyLibraryActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        libraryListener?.remove()
+        driveManager.cleanup()
     }
 }

@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.Comment
 
-class CommentAdapter(
+class CommentAdapter(//handles all comments from FireBase through Google build in interface and get them to the app
     private val comments: List<Comment>
 ) : RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() {
 

@@ -13,6 +13,9 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 
+/**
+ * Handles all the Firebase Storage and Database logic for a specific subject folder.
+ */
 class SubjectFilesManager(private val driveId: String) {
 
     private val db = FirebaseFirestore.getInstance()
@@ -145,6 +148,11 @@ class SubjectFilesManager(private val driveId: String) {
             .addOnSuccessListener { onSuccess() }
     }
 
+    /**
+     * uploadFile: This is a complex function!
+     * 1. It uploads the physical file (PDF or Image) to Firebase Storage.
+     * 2. It takes the secure download link and saves it into the Firestore database so others can see it.
+     */
     fun uploadFile(uri: Uri, isCamera: Boolean, mimeType: String?, description: String, onComplete: (Boolean, String?) -> Unit) {
         val user = auth.currentUser ?: return
         

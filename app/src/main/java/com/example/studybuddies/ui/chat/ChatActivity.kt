@@ -9,10 +9,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.ChatMessage
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 
+/**
+ *This is the screen where users can send messages.
+ * It uses IChatManager(Interface) to fetch messages from the database.
+ */
 class ChatActivity : AppCompatActivity() {
 
     private lateinit var etMessage: EditText
@@ -20,14 +21,12 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var rvMessages: RecyclerView
     private lateinit var chatAdapter: ChatAdapter
 
-    private val db by lazy { FirebaseFirestore.getInstance() }
-    private val auth by lazy { FirebaseAuth.getInstance() }
-    private val messagesList = mutableListOf<ChatMessage>()
+    private lateinit var chatManager: IChatManager
+    private val messagesList = mutableListOf<ChatMessage>() //changeable list
 
     private var targetUid: String = ""
     private var targetName: String = ""
     private var chatId: String = ""
-    private var chatListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,9 @@ class ChatActivity : AppCompatActivity() {
         targetUid = intent.getStringExtra("TARGET_UID") ?: ""
         targetName = intent.getStringExtra("TARGET_NAME") ?: "Chat"
 
-        val myUid = auth.currentUser?.uid ?: ""
+        chatManager = FirebaseChatManager()
+        
+        val myUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
         if (myUid.isEmpty() || targetUid.isEmpty()) {
             Toast.makeText(this, "Error: Invalid users for chat.", Toast.LENGTH_SHORT).show()
             finish()
@@ -71,59 +72,34 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupFirestoreListener() {
-        chatListener = db.collection("chats").document(chatId).collection("messages")
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Toast.makeText(this, "Listen failed: ${error.message}", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
-                }
+    private fun setupFirestoreListener() { //Get all Chat messages
+        chatManager.listenToMessages(chatId) { msgs, error ->
+            if (error != null) {
+                Toast.makeText(this, "Failed to load messages due to: ${error.message}", Toast.LENGTH_SHORT).show()
+                return@listenToMessages
+            }
 
-                if (snapshot != null) {
-                    val msgs = snapshot.toObjects(ChatMessage::class.java)
-                    chatAdapter.updateMessages(msgs)
-                    if (msgs.isNotEmpty()) {
-                        rvMessages.smoothScrollToPosition(msgs.size - 1)
-                    }
+            if (msgs != null) {
+                chatAdapter.updateMessages(msgs)
+                if (msgs.isNotEmpty()) {
+                    rvMessages.smoothScrollToPosition(msgs.size - 1)
                 }
             }
+        }
     }
 
     private fun sendMessage(text: String) {
-        val user = auth.currentUser
-        if (user == null) return
-
-        val message = ChatMessage(
-            id = "",
-            text = text,
-            senderId = user.uid,
-            senderEmail = user.email ?: "Unknown",
-            timestamp = System.currentTimeMillis()
-        )
-
-        val messageRef = db.collection("chats").document(chatId).collection("messages").document()
-        val finalMessage = message.copy(id = messageRef.id)
-
-        messageRef.set(finalMessage)
-            .addOnSuccessListener {
+        chatManager.sendMessage(chatId, targetUid, text) { success, errorMsg ->
+            if (success) {
                 etMessage.text.clear()
-                
-                if (targetUid != "GLOBAL_CHAT") {
-                    val notif = hashMapOf(
-                        "title" to "New message from ${user.email ?: "Unknown"}", 
-                        "message" to text
-                    )
-                    db.collection("users").document(targetUid).collection("notifications").add(notif)
-                }
+            } else {
+                Toast.makeText(this, "Failed to send: $errorMsg", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to send: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        chatListener?.remove()
+        chatManager.cleanup()
     }
 }

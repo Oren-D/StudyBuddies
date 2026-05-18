@@ -9,18 +9,21 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.studybuddies.ui.dashboard.MainActivity
 
+/**
+ *  This screen handles creating a new account.
+ * It uses IAuthenticationManager to register the user in Firebase.
+ */
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
+    private lateinit var authManager: IAuthenticationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        auth = FirebaseAuth.getInstance()
+        authManager = FirebaseAuthenticationManager()
 
         val etEmail = findViewById<EditText>(R.id.etEmail)
         val etPassword = findViewById<EditText>(R.id.etPassword)
@@ -41,35 +44,21 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        val user = auth.currentUser
-                        if (user != null) {
-                            val newUser = User(
-                                uid = user.uid,
-                                email = email,
-                                displayName = email.substringBefore("@"),
-                                reputationPoints = 100
-                            )
-                            FirebaseFirestore.getInstance().collection("users").document(user.uid)
-                                .set(newUser)
-                                .addOnSuccessListener {
-                                    Toast.makeText(this@RegisterActivity, "Registration Successful", Toast.LENGTH_SHORT).show()
-                                    finish()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this@RegisterActivity, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                        }
-                    } else {
-                        Toast.makeText(this@RegisterActivity, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
+            authManager.register(email, password) { isSuccess, errorMsg ->
+                if (isSuccess) {
+                    Toast.makeText(this, "Registration Successful", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this@RegisterActivity, "Registration Failed: $errorMsg", Toast.LENGTH_SHORT).show()
                 }
+            }
         }
 
         tvLogin.setOnClickListener {
-            finish()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()//THE MOST ***** INTENT EVER
         }
     }
 }

@@ -9,9 +9,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.studybuddies.ui.auth.FirebaseAuthenticationManager
+import com.example.studybuddies.ui.auth.IAuthenticationManager
 
+/**
+ * Shows your profile details and lets you change your picture.
+ * It uses IUserManager for profile data and IAuthenticationManager for logging out safely.
+ */
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var tvProfileName: TextView
@@ -25,9 +29,8 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var ivProfilePicture: com.google.android.material.imageview.ShapeableImageView
     private lateinit var fabEditPicture: com.google.android.material.floatingactionbutton.FloatingActionButton
 
-    private val auth by lazy { FirebaseAuth.getInstance() }
-    private val db by lazy { FirebaseFirestore.getInstance() }
-    private var profileListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private lateinit var authManager: IAuthenticationManager
+    private lateinit var userManager: IUserManager
 
     private val pickImageLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
         if (uri != null) {
@@ -40,11 +43,11 @@ class ProfileActivity : AppCompatActivity() {
                 scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 70, outputStream)
                 val base64String = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.DEFAULT)
                 
-                val user = auth.currentUser ?: return@registerForActivityResult
-                db.collection("users").document(user.uid).update("profileImageUri", base64String)
-                    .addOnSuccessListener {
+                userManager.updateProfileImage(base64String) { success ->
+                    if (success) {
                         Toast.makeText(this, "Profile picture updated!", Toast.LENGTH_SHORT).show()
                     }
+                }
             } catch (e: Exception) {
                 Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
             }
@@ -54,6 +57,9 @@ class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
+
+        authManager = FirebaseAuthenticationManager()
+        userManager = FirebaseUserManager()
 
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -108,49 +114,35 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btnLogout.setOnClickListener {
-            auth.signOut()
-            startActivity(Intent(this, com.example.studybuddies.ui.auth.LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            finish()
+            userManager.cleanup()
+            authManager.logout()
+            finish() // MainActivity's onResume will catch this!
         }
     }
 
     private fun loadUserProfile() {
-        val user = auth.currentUser
-        if (user == null) {
-            finish()
-            return
-        }
-
-        tvProfileEmail.text = user.email
-
-        profileListener = db.collection("users").document(user.uid).addSnapshotListener { snapshot, error ->
-            if (error != null) {
+        userManager.listenToUserProfile { userData, error ->
+            if (error != null || userData == null) {
                 Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show()
-                return@addSnapshotListener
+                return@listenToUserProfile
             }
 
-            if (snapshot != null && snapshot.exists()) {
-                val userData = snapshot.toObject(User::class.java)
-                userData?.let {
-                    tvProfileName.text = it.displayName
-                    tvReputation.text = it.reputationPoints.toString()
-                    
-                    if (it.profileImageUri.isNotEmpty()) {
-                        try {
-                            val imageBytes = android.util.Base64.decode(it.profileImageUri, android.util.Base64.DEFAULT)
-                            val decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                            ivProfilePicture.setImageBitmap(decodedImage)
-                        } catch(e: Exception) {}
-                    }
-                }
+            tvProfileEmail.text = userData.email
+            tvProfileName.text = userData.displayName
+            tvReputation.text = userData.reputationPoints.toString()
+            
+            if (userData.profileImageUri.isNotEmpty()) {
+                try {
+                    val imageBytes = android.util.Base64.decode(userData.profileImageUri, android.util.Base64.DEFAULT)
+                    val decodedImage = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    ivProfilePicture.setImageBitmap(decodedImage)
+                } catch(e: Exception) {}
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        profileListener?.remove()
+        userManager.cleanup()
     }
 }
