@@ -2,7 +2,6 @@ package com.example.studybuddies.ui.auth
 
 /**
  * interface for Auth operations.
- * Ensures that our login/register screens are completely decoupled from Firebase Auth!
  */
 interface IAuthenticationManager {
     /**

@@ -12,7 +12,6 @@ import com.google.android.material.textfield.TextInputEditText
 
 /**
  * This screen handles user login.
- *
  */
 class LoginActivity : AppCompatActivity() {
 

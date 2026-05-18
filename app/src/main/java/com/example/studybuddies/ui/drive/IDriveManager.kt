@@ -5,7 +5,7 @@ import com.example.studybuddies.data.model.DriveFile
 import com.example.studybuddies.data.model.SubjectDrive
 
 
-//An interface for Drive operations. talks to firebase and gets the info for the other classes
+//An interface for Drive operations. acts as a contract/menu, while FirebaseDriveManager actually talks to Firebase
 
 interface IDriveManager {
     fun listenToSubjectDrives(onUpdate: (List<SubjectDrive>?, Exception?) -> Unit)
