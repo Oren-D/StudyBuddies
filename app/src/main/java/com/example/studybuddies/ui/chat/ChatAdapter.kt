@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.studybuddies.R
 import com.example.studybuddies.data.model.ChatMessage
 
-//Handles all Chat from FireBase through IChatManager and gets them to the app
+//Takes the raw messages list and draws them as visual chat bubbles in the RecyclerView
 class ChatAdapter(private val messages: MutableList<ChatMessage>) :
     RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
